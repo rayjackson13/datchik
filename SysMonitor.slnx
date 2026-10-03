@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="README.md" />
+  </Folder>
   <Folder Name="/Spikes/">
     <Project Path="FpsSpike/FpsSpike.csproj" />
     <Project Path="SensorSpike/SensorSpike.csproj" />
