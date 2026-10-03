@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
+    <File Path="installer/Datchik.iss" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/Spikes/">

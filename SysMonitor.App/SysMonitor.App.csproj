@@ -1,20 +1,83 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\SysMonitor.Core\SysMonitor.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Assets\datchik.ico" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\SysMonitor.Core\SysMonitor.Core.csproj" />
+	</ItemGroup>
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-  </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<Resource Include="Assets\datchik.ico" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+	</PropertyGroup>
+
+	<!-- App identity. <Version> is the ONE place the version lives; the installer uses it too. -->
+	<PropertyGroup>
+		<AssemblyName>Datchik</AssemblyName>
+		<Product>Datchik</Product>
+		<Version>0.1.0</Version>
+		<ApplicationIcon>Assets\datchik.ico</ApplicationIcon>
+	</PropertyGroup>
+
+	<!--
+    Release-only settings, so debugging with F5 (a Debug build) stays fast and unaffected.
+    "Condition" = only apply this group when the expression is true.
+  -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<!-- Build for 64-bit Windows. -->
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+
+		<!-- Bundle the .NET runtime, so friends don't need .NET installed. -->
+		<SelfContained>true</SelfContained>
+
+		<!-- Pre-compile to machine code, so the app starts faster. -->
+		<PublishReadyToRun>true</PublishReadyToRun>
+
+		<!-- Publish into the "publish" folder next to the solution, where the installer script looks. -->
+		<PublishDir>$(MSBuildProjectDirectory)\..\publish\</PublishDir>
+	</PropertyGroup>
+
+	<!--
+    Build tools, downloaded automatically by "dotnet" like any other package and pinned to an
+    exact version, so every build uses the same compiler.
+    PrivateAssets="all" = a build-time tool only; nothing from it ends up in the app.
+  -->
+	<ItemGroup>
+		<PackageReference Include="Tools.InnoSetup" Version="6.7.1" PrivateAssets="all" />
+	</ItemGroup>
+
+	<!--
+    Before publishing: delete the old publish folder, so no stale files end up in the installer.
+    BeforeTargets="PrepareForPublish" = run this just before publishing starts.
+  -->
+	<Target Name="CleanPublishFolder" BeforeTargets="PrepareForPublish">
+		<RemoveDir Directories="$(PublishDir)" />
+	</Target>
+
+	<!--
+    After publishing: compile the installer.
+    AfterTargets="Publish" = run this right after publishing finishes.
+    $(InnoSetupCompiler) is provided by the Tools.InnoSetup package: the path to ISCC.exe.
+    &quot; = a double quote inside an XML attribute, so paths with spaces stay intact.
+    /Q = quiet mode (less output); /DAppVersion passes the version from <Version> above.
+    If ISCC fails, Exec fails the whole build, so you never get a half-built result.
+  -->
+	<Target Name="BuildInstaller" AfterTargets="Publish">
+		<Exec Command="&quot;$(InnoSetupCompiler)&quot; /Q &quot;/DAppVersion=$(Version)&quot; &quot;$(MSBuildProjectDirectory)\..\installer\Datchik.iss&quot;" />
+		<Message Importance="high" Text="Installer ready: installer-output\DatchikSetup-$(Version).exe" />
+	</Target>
 </Project>
