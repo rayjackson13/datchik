@@ -21,9 +21,6 @@ public static class KnownSensors
     /// <summary>Power drawn by the whole CPU package, in watts.</summary>
     public static readonly SensorId CpuPower = new(HardwareType.Cpu, SensorType.Power, "Package");
 
-    /// <summary>CPU cooler fan speed, in RPM, from the motherboard chip. "Fan #1" is a guess for now.</summary>
-    public static readonly SensorId CpuFan = new(HardwareType.SuperIO, SensorType.Fan, "Fan #1");
-
     /// <summary>GPU core load, in percent.</summary>
     public static readonly SensorId GpuUtilization = new(HardwareType.GpuNvidia, SensorType.Load, "GPU Core");
 

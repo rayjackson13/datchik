@@ -8,7 +8,6 @@
 /// <param name="CpuTemperatureCelsius">CPU temperature in °C.</param>
 /// <param name="CpuClockMhz">Average CPU core clock in MHz.</param>
 /// <param name="CpuPowerWatts">CPU package power in watts.</param>
-/// <param name="CpuFanRpm">CPU fan speed in RPM.</param>
 /// <param name="RamUsedGigabytes">RAM in use, in GB.</param>
 /// <param name="RamTotalGigabytes">Installed RAM, in GB.</param>
 /// <param name="GpuUtilizationPercent">GPU core load, 0–100.</param>
@@ -19,12 +18,16 @@
 /// <param name="GpuFanRpm">GPU fan speed in RPM.</param>
 /// <param name="GpuMemoryUsedMegabytes">Video memory in use, in MB.</param>
 /// <param name="GpuMemoryTotalMegabytes">Total video memory, in MB.</param>
+/// <param name="MotherboardFans">
+/// Every fan header on the motherboard with its speed. The App decides which one is the CPU fan.
+/// </param>
+// IReadOnlyList<T> = a list that can be read but not changed. Whoever receives the snapshot
+// can't accidentally add or remove fans from it.
 public record MetricsSnapshot(
     float? CpuUtilizationPercent,
     float? CpuTemperatureCelsius,
     float? CpuClockMhz,
     float? CpuPowerWatts,
-    float? CpuFanRpm,
     double? RamUsedGigabytes,
     double? RamTotalGigabytes,
     float? GpuUtilizationPercent,
@@ -34,4 +37,5 @@ public record MetricsSnapshot(
     float? GpuPowerWatts,
     float? GpuFanRpm,
     float? GpuMemoryUsedMegabytes,
-    float? GpuMemoryTotalMegabytes);
+    float? GpuMemoryTotalMegabytes,
+    IReadOnlyList<FanSpeed> MotherboardFans);

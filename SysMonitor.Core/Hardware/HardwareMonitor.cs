@@ -1,32 +1,22 @@
-﻿using LibreHardwareMonitor.Hardware;
+﻿using LibreHardwareMonitor.Hardware; // Computer, IHardware, ISensor, HardwareType, SensorType
 
 namespace SysMonitor.Core.Hardware;
 
 /// <summary>
-/// Reads the CPU and GPU sensors the app displays. Create one when the app starts,
+/// Reads the CPU, GPU and motherboard sensors the app displays. Create one when the app starts,
 /// call <see cref="ReadMetrics"/> once per refresh, and dispose it when the app closes.
 /// Requires administrator rights for CPU and motherboard sensors.
 /// </summary>
-// "sealed"      = no other class can inherit from this one (it isn't designed for it).
-// ": IDisposable" = this class promises to have a Dispose() method that releases what it holds
-//                   (here: the hardware and the driver connection).
 public sealed class HardwareMonitor : IDisposable
 {
-    // ---- Fields: data each HardwareMonitor object keeps for its whole life ----
-    // "private"  = only code inside this class can use them.
-    // "readonly" = set once in the constructor, never changed afterwards.
-    // The "_" prefix is the usual C# naming convention for private fields, so you can tell
-    // them apart from local variables at a glance.
-
     /// <summary>LibreHardwareMonitor's view of this PC.</summary>
     private readonly Computer _computer;
 
-    // Each sensor we display, found once at startup. "ISensor?" = null if this PC doesn't have it.
+    // Each single sensor we display, found once at startup. "ISensor?" = null if this PC doesn't have it.
     private readonly ISensor? _cpuUtilizationSensor;
     private readonly ISensor? _cpuTemperatureSensor;
     private readonly ISensor? _cpuClockSensor;
     private readonly ISensor? _cpuPowerSensor;
-    private readonly ISensor? _cpuFanSensor;
     private readonly ISensor? _gpuUtilizationSensor;
     private readonly ISensor? _gpuTemperatureSensor;
     private readonly ISensor? _gpuClockSensor;
@@ -37,6 +27,12 @@ public sealed class HardwareMonitor : IDisposable
     private readonly ISensor? _gpuMemoryTotalSensor;
 
     /// <summary>
+    /// Every fan sensor on the motherboard's monitoring chip (SuperIO). Empty if the chip
+    /// isn't supported or the driver isn't available.
+    /// </summary>
+    private readonly ISensor[] _motherboardFanSensors;
+
+    /// <summary>
     /// Only the hardware that our sensors belong to. Refreshing just these each second,
     /// instead of everything, keeps the work per refresh as small as possible.
     /// </summary>
@@ -45,8 +41,6 @@ public sealed class HardwareMonitor : IDisposable
     /// <summary>
     /// Connects to the hardware and finds all the sensors. Takes a second or two.
     /// </summary>
-    // A constructor: runs once when someone writes "new HardwareMonitor()".
-    // It has the same name as the class and no return type.
     public HardwareMonitor()
     {
         _computer = new Computer
@@ -68,7 +62,6 @@ public sealed class HardwareMonitor : IDisposable
         _cpuTemperatureSensor = FindSensor(KnownSensors.CpuTemperature);
         _cpuClockSensor = FindSensor(KnownSensors.CpuClock);
         _cpuPowerSensor = FindSensor(KnownSensors.CpuPower);
-        _cpuFanSensor = FindSensor(KnownSensors.CpuFan);
         _gpuUtilizationSensor = FindSensor(KnownSensors.GpuUtilization);
         _gpuTemperatureSensor = FindSensor(KnownSensors.GpuTemperature);
         _gpuClockSensor = FindSensor(KnownSensors.GpuClock);
@@ -78,20 +71,24 @@ public sealed class HardwareMonitor : IDisposable
         _gpuMemoryUsedSensor = FindSensor(KnownSensors.GpuMemoryUsed);
         _gpuMemoryTotalSensor = FindSensor(KnownSensors.GpuMemoryTotal);
 
+        _motherboardFanSensors = FindMotherboardFanSensors();
+
         // Work out which hardware to refresh each second:
-        //   1. put all our sensors in an array (some may be null),
+        //   1. put all the single sensors in an array (some may be null),
         //   2. OfType<ISensor>() drops the nulls,
-        //   3. Select(...) takes the hardware each sensor belongs to,
-        //   4. Distinct() removes duplicates (e.g. ten sensors on the same GPU = one GPU),
-        //   5. ToArray() stores the result.
-        ISensor?[] allSensors =
+        //   3. Concat(...) adds the motherboard fan sensors to the list,
+        //   4. Select(...) takes the hardware each sensor belongs to,
+        //   5. Distinct() removes duplicates (ten sensors on the same GPU = one GPU),
+        //   6. ToArray() stores the result.
+        ISensor?[] singleSensors =
         [
-            _cpuUtilizationSensor, _cpuTemperatureSensor, _cpuClockSensor, _cpuPowerSensor, _cpuFanSensor,
-            _gpuUtilizationSensor, _gpuTemperatureSensor, _gpuClockSensor, _gpuVoltageSensor, _gpuPowerSensor, _gpuFanSensor,
-            _gpuMemoryUsedSensor, _gpuMemoryTotalSensor,
+            _cpuUtilizationSensor, _cpuTemperatureSensor, _cpuClockSensor, _cpuPowerSensor,
+            _gpuUtilizationSensor, _gpuTemperatureSensor, _gpuClockSensor, _gpuVoltageSensor,
+            _gpuPowerSensor, _gpuFanSensor, _gpuMemoryUsedSensor, _gpuMemoryTotalSensor,
         ];
-        _hardwareToUpdate = allSensors
+        _hardwareToUpdate = singleSensors
             .OfType<ISensor>()
+            .Concat(_motherboardFanSensors)
             .Select(sensor => sensor.Hardware)
             .Distinct()
             .ToArray();
@@ -108,15 +105,18 @@ public sealed class HardwareMonitor : IDisposable
         }
 
         // RAM comes straight from Windows, not from LibreHardwareMonitor.
-        // "var (a, b) = ..." unpacks the two values of the returned tuple.
         var (ramUsedGigabytes, ramTotalGigabytes) = SystemMemory.ReadUsage();
+
+        // Turn each fan sensor into a FanSpeed (its name plus current speed).
+        FanSpeed[] motherboardFans = _motherboardFanSensors
+            .Select(sensor => new FanSpeed(sensor.Name, sensor.Value))
+            .ToArray();
 
         return new MetricsSnapshot(
             CpuUtilizationPercent: _cpuUtilizationSensor?.Value,
             CpuTemperatureCelsius: _cpuTemperatureSensor?.Value,
             CpuClockMhz: _cpuClockSensor?.Value,
             CpuPowerWatts: _cpuPowerSensor?.Value,
-            CpuFanRpm: _cpuFanSensor?.Value,
             RamUsedGigabytes: ramUsedGigabytes,
             RamTotalGigabytes: ramTotalGigabytes,
             GpuUtilizationPercent: _gpuUtilizationSensor?.Value,
@@ -126,7 +126,8 @@ public sealed class HardwareMonitor : IDisposable
             GpuPowerWatts: _gpuPowerSensor?.Value,
             GpuFanRpm: _gpuFanSensor?.Value,
             GpuMemoryUsedMegabytes: _gpuMemoryUsedSensor?.Value,
-            GpuMemoryTotalMegabytes: _gpuMemoryTotalSensor?.Value);
+            GpuMemoryTotalMegabytes: _gpuMemoryTotalSensor?.Value,
+            MotherboardFans: motherboardFans);
     }
 
     /// <summary>
@@ -142,15 +143,34 @@ public sealed class HardwareMonitor : IDisposable
     /// like the motherboard chip. Returns null if this PC doesn't have it.
     /// </summary>
     /// <param name="sensorId">Which sensor to look for.</param>
-    // Same LINQ chain as in SensorLive: flatten hardware + sub-hardware, keep the right kind,
-    // collect their sensors, take the first one with the right type and name.
     private ISensor? FindSensor(SensorId sensorId)
     {
-        return _computer.Hardware
-            .SelectMany(hardware => hardware.SubHardware.Prepend(hardware))
+        return AllHardware()
             .Where(hardware => hardware.HardwareType == sensorId.HardwareType)
             .SelectMany(hardware => hardware.Sensors)
             .FirstOrDefault(sensor => sensor.SensorType == sensorId.SensorType && sensor.Name == sensorId.Name);
+    }
+
+    /// <summary>
+    /// Finds every fan sensor on the motherboard's monitoring chip (SuperIO).
+    /// </summary>
+    private ISensor[] FindMotherboardFanSensors()
+    {
+        return AllHardware()
+            .Where(hardware => hardware.HardwareType == HardwareType.SuperIO)
+            .SelectMany(hardware => hardware.Sensors)
+            .Where(sensor => sensor.SensorType == SensorType.Fan)
+            .ToArray();
+    }
+
+    /// <summary>
+    /// All hardware plus its sub-hardware as one flat list, so searches also find
+    /// sensors on the motherboard chip, which is sub-hardware of the motherboard.
+    /// </summary>
+    // IEnumerable<T> = "something you can loop over". LINQ methods like Where and Select work on it.
+    private IEnumerable<IHardware> AllHardware()
+    {
+        return _computer.Hardware.SelectMany(hardware => hardware.SubHardware.Prepend(hardware));
     }
 
     /// <summary>

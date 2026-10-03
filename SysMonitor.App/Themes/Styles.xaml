@@ -1,0 +1,138 @@
+﻿<!--
+    All shared styles, colors and font sizes for Datchik.
+    Loaded once in App.xaml, so every window and control can use them with
+    {StaticResource Name}. Change a color or size here, and it changes everywhere.
+
+    Order matters: a resource must be defined above anything that uses it.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+					xmlns:controls="clr-namespace:SysMonitor.App.Controls">
+	<!--
+        xmlns:sys lets us use plain .NET types in XAML, here sys:Double (a decimal number)
+        for font sizes. "xmlns:prefix" lines are XAML's version of C#'s "using".
+    -->
+
+	<!-- ===== Colors ===== -->
+	<!-- A "brush" is how WPF paints things; a SolidColorBrush paints one flat color. -->
+	<SolidColorBrush x:Key="WindowBackgroundBrush" Color="#22242A" />
+	<SolidColorBrush x:Key="TextBrush" Color="#E6E6E6" />
+	<SolidColorBrush x:Key="MutedTextBrush" Color="#8A8A8A" />
+	<SolidColorBrush x:Key="AccentBrush" Color="#2FA0A0" />
+
+	<!-- ===== Font sizes ===== -->
+	<sys:Double x:Key="BodyFontSize">14</sys:Double>
+	<sys:Double x:Key="HeaderFontSize">16</sys:Double>
+	<sys:Double x:Key="SmallFontSize">12</sys:Double>
+
+	<!-- ===== Text styles ===== -->
+
+	<!-- The base text style: every other text style starts from this one (BasedOn). -->
+	<Style x:Key="TextStyle" TargetType="TextBlock">
+		<Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+		<Setter Property="FontSize" Value="{StaticResource BodyFontSize}" />
+		<Setter Property="Margin" Value="0,2" />
+	</Style>
+
+	<!-- Section headers like "CPU". Four margin numbers = left, top, right, bottom. -->
+	<Style x:Key="SectionHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource TextStyle}">
+		<Setter Property="FontSize" Value="{StaticResource HeaderFontSize}" />
+		<Setter Property="FontWeight" Value="Bold" />
+		<Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+		<Setter Property="Margin" Value="0,12,0,4" />
+	</Style>
+
+	<!--
+        The value on the right of each row. Long values are cut off with "…";
+        the 12 units of left margin keep them from touching the label.
+    -->
+	<Style x:Key="ValueStyle" TargetType="TextBlock" BasedOn="{StaticResource TextStyle}">
+		<Setter Property="HorizontalAlignment" Value="Right" />
+		<Setter Property="FontWeight" Value="SemiBold" />
+		<Setter Property="TextTrimming" Value="CharacterEllipsis" />
+		<Setter Property="Margin" Value="12,0,0,0" />
+		<Setter Property="VerticalAlignment" Value="Center" />
+	</Style>
+
+	<!-- ===== Button styles ===== -->
+
+	<!--
+        A flat, link-like button for the "Show more / Show less" switch. The template replaces
+        WPF's default grey box with just the text, centered.
+    -->
+	<Style x:Key="LinkButtonStyle" TargetType="Button">
+		<Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+		<Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
+		<Setter Property="Cursor" Value="Hand" />
+		<Setter Property="FocusVisualStyle" Value="{x:Null}" />
+		<Setter Property="Focusable" Value="False" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="Button">
+					<!-- Background="Transparent" makes the whole area clickable, not just the letters. -->
+					<Border Background="Transparent" Padding="0,12,0,0">
+						<ContentPresenter HorizontalAlignment="Center" />
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+		<Style.Triggers>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
+	<!--
+        A button that looks like a row label, for the CPU fan selector ("Fan #2 ▾").
+    -->
+	<Style x:Key="InlineSelectorButtonStyle" TargetType="Button">
+		<Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+		<Setter Property="FontSize" Value="{StaticResource BodyFontSize}" />
+		<Setter Property="Cursor" Value="Hand" />
+		<Setter Property="FocusVisualStyle" Value="{x:Null}" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="Button">
+					<!-- No padding: MetricRow already spaces its labels, whether they're text or a button. -->
+					<Border Background="Transparent">
+						<ContentPresenter VerticalAlignment="Center" />
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+		<!-- Hover color: currently the same as normal; use MutedTextBrush for a visible change. -->
+		<Style.Triggers>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
+	<!-- ===== Display mode ===== -->
+
+	<!--
+        A converter turns one kind of value into another for a binding. This built-in one
+        turns true into Visible and false into Collapsed (hidden, taking no space).
+    -->
+	<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+	<!--
+        For rows shown only in extended mode. Their Visibility is bound to IsExtendedMode
+        on the window's ViewModel: "find the Window I'm in, take its DataContext
+        (the MainViewModel), read IsExtendedMode, and convert it to a Visibility".
+        Searching up to the Window means this also works inside the section panels
+        we'll create next, whose own DataContext is a section ViewModel.
+    -->
+	<Style x:Key="ExtendedOnlyRowStyle" TargetType="controls:MetricRow">
+		<Setter Property="Visibility"
+                Value="{Binding DataContext.IsExtendedMode,
+                        RelativeSource={RelativeSource AncestorType=Window},
+                        Converter={StaticResource BooleanToVisibilityConverter}}" />
+	</Style>
+
+	<!-- ===== Layout ===== -->
+	<!-- The height of every metric row. -->
+	<sys:Double x:Key="MetricRowHeight">24</sys:Double>
+</ResourceDictionary>

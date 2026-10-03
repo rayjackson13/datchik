@@ -1,0 +1,43 @@
+﻿<!--
+    One row of the display: a label on the left (40% of the width) and a value on the right
+    (up to 60%, right-aligned, cut off with "…" if too long). Used like:
+
+        <controls:MetricRow Label="Temperature" Value="52 °C" />
+
+    Label can also be any element instead of text, e.g. the CPU fan selector button.
+-->
+<UserControl x:Class="SysMonitor.App.Controls.MetricRow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Margin="8,0,0,0" = the small indent that sets rows apart from section headers. -->
+    <Grid Margin="8,0,0,0" Height="{StaticResource MetricRowHeight}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*" />
+            <!-- label: 40% -->
+            <ColumnDefinition Width="6*" />
+            <!-- value: 60% -->
+        </Grid.ColumnDefinitions>
+
+        <!--
+            The label. A ContentPresenter shows whatever Label holds: text becomes a TextBlock,
+            an element (like a button) is shown as it is.
+            TextElement.Foreground / FontSize are passed down to the text inside it.
+
+            {Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}} means:
+            "show the Label property of the MetricRow I'm part of", and update automatically
+            whenever it changes.
+        -->
+        <ContentPresenter Grid.Column="0"
+                          Content="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          TextElement.Foreground="{StaticResource TextBrush}"
+                          TextElement.FontSize="{StaticResource BodyFontSize}"
+                          VerticalAlignment="Center"
+                          Margin="0,2" />
+
+        <!-- The value, bound to this row's Value property the same way. -->
+        <TextBlock Grid.Column="1"
+                   Text="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                   Style="{StaticResource ValueStyle}" />
+    </Grid>
+</UserControl>
