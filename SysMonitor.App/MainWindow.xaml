@@ -1,0 +1,173 @@
+﻿<!--
+    The main window: CPU and GPU readings in two sections.
+
+    XAML basics:
+      - Each <Tag> creates a UI element; attributes like Width="320" set its properties.
+      - x:Class connects this file to the C# class in MainWindow.xaml.cs (the "code-behind").
+      - x:Name gives an element a name, so the C# code can reach it, e.g. CpuUtilizationText.Text = "...".
+-->
+<Window x:Class="SysMonitor.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Datchik"
+        Width="400"
+        SizeToContent="Height"
+        ResizeMode="CanMinimize"
+        Topmost="True"
+        Background="#22242A">
+    <!-- SizeToContent="Height": the window grows or shrinks vertically to fit its content. -->
+
+    <!-- Resources: reusable things for this window, here, styles (shared appearance). -->
+    <Window.Resources>
+
+        <!-- No x:Key = applies automatically to EVERY TextBlock in this window. -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#E6E6E6" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Margin" Value="0,2" />
+            <!-- Margin="0,2" = 0 left/right, 2 top/bottom (in device-independent pixels). -->
+        </Style>
+
+        <!--
+            Style for section headers like "CPU". It has an x:Key, so it only applies to
+            elements that ask for it with Style="{StaticResource SectionHeaderStyle}".
+            BasedOn = start from the TextBlock style above, then change a few things.
+        -->
+        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock"
+               BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#76B900" />
+            <Setter Property="Margin" Value="0,12,0,4" />
+            <!-- Four numbers = left, top, right, bottom. -->
+        </Style>
+
+        <!-- Style for the value on the right of each row. -->
+        <Style x:Key="ValueStyle" TargetType="TextBlock"
+               BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!--
+            A flat, link-like button for the "Show more / Show less" switch.
+            WPF's default button is a grey box that looks out of place on a dark window,
+            so we replace its whole look with a "template": here, just its text, centered.
+        -->
+        <Style x:Key="LinkButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#8A8A8A" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <!--
+                            Background="Transparent" (not "no background") makes the whole
+                            area clickable, not just the letters.
+                        -->
+                        <Border Background="Transparent" Padding="0,12,0,0">
+                            <!-- ContentPresenter = "put the button's Content here", i.e. its text. -->
+                            <ContentPresenter HorizontalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <!-- No dotted keyboard-focus outline around the button. -->
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <!-- Can't be focused, so it's only toggled by clicking, never by the keyboard. -->
+            <Setter Property="Focusable" Value="False" />
+            <!-- Triggers change properties while a condition is true: brighter text on hover. -->
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#E6E6E6" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <!-- StackPanel: places its children one under another, top to bottom. -->
+    <StackPanel x:Name="MetricsPanel" Margin="16,4,16,16">
+
+        <!--
+            Each row is a DockPanel holding two TextBlocks: the label on the left,
+            and the value, which fills the rest and aligns right.
+            Every value starts as "—" until the first reading arrives.
+        -->
+
+        <TextBlock Text="FPS" Style="{StaticResource SectionHeaderStyle}" />
+        <DockPanel>
+            <TextBlock Text="Game" />
+            <TextBlock x:Name="GameNameText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel>
+            <TextBlock Text="Current" />
+            <TextBlock x:Name="CurrentFpsText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel>
+            <TextBlock Text="1% low" />
+            <TextBlock x:Name="OnePercentLowText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+
+        <TextBlock Text="CPU" Style="{StaticResource SectionHeaderStyle}" />
+        <DockPanel>
+            <TextBlock Text="Utilization" />
+            <TextBlock x:Name="CpuUtilizationText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel>
+            <TextBlock Text="Temperature" />
+            <TextBlock x:Name="CpuTemperatureText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel Tag="Extended">
+            <TextBlock Text="Clock" />
+            <TextBlock x:Name="CpuClockText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel Tag="Extended">
+            <TextBlock Text="Power" />
+            <TextBlock x:Name="CpuPowerText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel Tag="Extended">
+            <TextBlock Text="Fan" />
+            <TextBlock x:Name="CpuFanText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+
+        <TextBlock Text="GPU" Style="{StaticResource SectionHeaderStyle}" />
+        <DockPanel>
+            <TextBlock Text="Utilization" />
+            <TextBlock x:Name="GpuUtilizationText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel>
+            <TextBlock Text="Temperature" />
+            <TextBlock x:Name="GpuTemperatureText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel Tag="Extended">
+            <TextBlock Text="Clock" />
+            <TextBlock x:Name="GpuClockText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel Tag="Extended">
+            <TextBlock Text="Voltage" />
+            <TextBlock x:Name="GpuVoltageText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel Tag="Extended">
+            <TextBlock Text="Power" />
+            <TextBlock x:Name="GpuPowerText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel>
+            <TextBlock Text="Fan" />
+            <TextBlock x:Name="GpuFanText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+        <DockPanel>
+            <TextBlock Text="VRAM" />
+            <TextBlock x:Name="GpuMemoryText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+
+        <TextBlock Text="Memory" Style="{StaticResource SectionHeaderStyle}" />
+        <DockPanel>
+            <TextBlock Text="RAM" />
+            <TextBlock x:Name="RamUsageText" Text="—" Style="{StaticResource ValueStyle}" />
+        </DockPanel>
+
+        <!-- Switches between basic and extended mode. Its text is set from the code. -->
+        <Button x:Name="DisplayModeButton"
+                Style="{StaticResource LinkButtonStyle}"
+                Click="DisplayModeButton_Click" />
+    </StackPanel>
+</Window>

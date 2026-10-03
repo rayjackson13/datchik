@@ -1,0 +1,37 @@
+﻿namespace SysMonitor.Core.Hardware;
+
+/// <summary>
+/// All sensor values read at one moment. Each value is null if the sensor wasn't found
+/// or had no reading, so the window can show a dash instead of a misleading 0.
+/// </summary>
+/// <param name="CpuUtilizationPercent">Total CPU load, 0–100.</param>
+/// <param name="CpuTemperatureCelsius">CPU temperature in °C.</param>
+/// <param name="CpuClockMhz">Average CPU core clock in MHz.</param>
+/// <param name="CpuPowerWatts">CPU package power in watts.</param>
+/// <param name="CpuFanRpm">CPU fan speed in RPM.</param>
+/// <param name="RamUsedGigabytes">RAM in use, in GB.</param>
+/// <param name="RamTotalGigabytes">Installed RAM, in GB.</param>
+/// <param name="GpuUtilizationPercent">GPU core load, 0–100.</param>
+/// <param name="GpuTemperatureCelsius">GPU core temperature in °C.</param>
+/// <param name="GpuClockMhz">GPU core clock in MHz.</param>
+/// <param name="GpuVoltageVolts">GPU core voltage in volts.</param>
+/// <param name="GpuPowerWatts">GPU power in watts.</param>
+/// <param name="GpuFanRpm">GPU fan speed in RPM.</param>
+/// <param name="GpuMemoryUsedMegabytes">Video memory in use, in MB.</param>
+/// <param name="GpuMemoryTotalMegabytes">Total video memory, in MB.</param>
+public record MetricsSnapshot(
+    float? CpuUtilizationPercent,
+    float? CpuTemperatureCelsius,
+    float? CpuClockMhz,
+    float? CpuPowerWatts,
+    float? CpuFanRpm,
+    double? RamUsedGigabytes,
+    double? RamTotalGigabytes,
+    float? GpuUtilizationPercent,
+    float? GpuTemperatureCelsius,
+    float? GpuClockMhz,
+    float? GpuVoltageVolts,
+    float? GpuPowerWatts,
+    float? GpuFanRpm,
+    float? GpuMemoryUsedMegabytes,
+    float? GpuMemoryTotalMegabytes);

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Spikes/">
+    <Project Path="FpsSpike/FpsSpike.csproj" />
+    <Project Path="SensorSpike/SensorSpike.csproj" />
+  </Folder>
+  <Project Path="SysMonitor.App/SysMonitor.App.csproj" />
+  <Project Path="SysMonitor.Core/SysMonitor.Core.csproj" />
+</Solution>
