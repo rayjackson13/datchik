@@ -1,0 +1,49 @@
+﻿<!--
+    The CPU section, including the CPU fan selector. DataContext: a CpuViewModel (set by MainWindow).
+-->
+<UserControl x:Class="SysMonitor.App.Views.CpuPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:SysMonitor.App.Controls">
+    <StackPanel>
+        <TextBlock Text="CPU" Style="{StaticResource SectionHeaderStyle}" />
+        <controls:MetricRow Label="Utilization" Value="{Binding Utilization}" />
+        <controls:MetricRow Label="Temperature" Value="{Binding Temperature}" />
+        <controls:MetricRow Label="Clock" Value="{Binding Clock}" Style="{StaticResource ExtendedOnlyRowStyle}" />
+        <controls:MetricRow Label="Power" Value="{Binding Power}" Style="{StaticResource ExtendedOnlyRowStyle}" />
+
+        <!--
+            The CPU fan row. Its label is a button showing the chosen fan ("Fan #2 ▾");
+            clicking it opens the fan menu (see CpuPanel.xaml.cs).
+        -->
+        <controls:MetricRow Value="{Binding Fan}" Style="{StaticResource ExtendedOnlyRowStyle}">
+            <controls:MetricRow.Label>
+                <Button Content="{Binding SelectedFanLabel}"
+                        Style="{StaticResource InlineSelectorButtonStyle}"
+                        Click="FanSelectorButton_Click"
+                        ToolTip="Choose which motherboard fan is the CPU fan">
+                    <Button.ContextMenu>
+                        <!-- One menu item per entry in FanOptions. -->
+                        <ContextMenu ItemsSource="{Binding FanOptions}">
+                            <ContextMenu.ItemContainerStyle>
+                                <!-- Inside here, {Binding ...} refers to one FanOptionViewModel. -->
+                                <Style TargetType="MenuItem">
+                                    <Setter Property="Header" Value="{Binding Label}" />
+                                    <Setter Property="IsChecked" Value="{Binding IsSelected, Mode=OneWay}" />
+                                    <!--
+                                        The command lives on the CpuViewModel, which is the menu's
+                                        own DataContext, so look it up through the menu.
+                                    -->
+                                    <Setter Property="Command"
+                                            Value="{Binding DataContext.SelectFanCommand,
+                                                            RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                    <Setter Property="CommandParameter" Value="{Binding Name}" />
+                                </Style>
+                            </ContextMenu.ItemContainerStyle>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </controls:MetricRow.Label>
+        </controls:MetricRow>
+    </StackPanel>
+</UserControl>

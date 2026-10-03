@@ -1,0 +1,12 @@
+﻿<!--
+    The Memory section. DataContext: a MemoryViewModel (set by MainWindow).
+-->
+<UserControl x:Class="SysMonitor.App.Views.MemoryPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:SysMonitor.App.Controls">
+    <StackPanel>
+        <TextBlock Text="Memory" Style="{StaticResource SectionHeaderStyle}" />
+        <controls:MetricRow Label="RAM" Value="{Binding Ram}" />
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,14 @@
+﻿<!--
+    The Frame Rate section. DataContext: a FrameRateViewModel (set by MainWindow).
+-->
+<UserControl x:Class="SysMonitor.App.Views.FrameRatePanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:SysMonitor.App.Controls">
+    <StackPanel>
+        <TextBlock Text="Frame Rate" Style="{StaticResource SectionHeaderStyle}" />
+        <controls:MetricRow Label="FPS" Value="{Binding CurrentFps}" />
+        <controls:MetricRow Label="FPS 1%L" Value="{Binding OnePercentLow}" />
+        <controls:MetricRow Label="Game" Value="{Binding GameName}" />
+    </StackPanel>
+</UserControl>

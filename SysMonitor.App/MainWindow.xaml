@@ -1,12 +1,12 @@
 ﻿<!--
-    The main window: frame rate, CPU, GPU and memory, in sections.
-    All values are bound to the MainViewModel (the window's DataContext, set in the code-behind).
-    Rows with ExtendedOnlyRowStyle are only visible in extended mode.
+    The main window: stacks the section panels and the mode switch.
+    DataContext: the MainViewModel (set in the code-behind). Each panel gets its own
+    section ViewModel through DataContext="{Binding ...}".
 -->
 <Window x:Class="SysMonitor.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:SysMonitor.App.Controls"
+        xmlns:views="clr-namespace:SysMonitor.App.Views"
         Title="Datchik"
         Width="320"
         SizeToContent="Height"
@@ -15,73 +15,13 @@
         Background="{StaticResource WindowBackgroundBrush}">
 
     <StackPanel Margin="8,-4,8,12">
+        <views:FrameRatePanel DataContext="{Binding FrameRate}" />
+        <views:CpuPanel DataContext="{Binding Cpu}" />
+        <views:GpuPanel DataContext="{Binding Gpu}" />
+        <views:MemoryPanel DataContext="{Binding Memory}" />
 
-        <TextBlock Text="Frame Rate" Style="{StaticResource SectionHeaderStyle}" />
-        <controls:MetricRow Label="FPS" Value="{Binding FrameRate.CurrentFps}" />
-        <controls:MetricRow Label="FPS 1%L" Value="{Binding FrameRate.OnePercentLow}" />
-        <controls:MetricRow Label="Game" Value="{Binding FrameRate.GameName}" />
-
-        <TextBlock Text="CPU" Style="{StaticResource SectionHeaderStyle}" />
-        <controls:MetricRow Label="Utilization" Value="{Binding Cpu.Utilization}" />
-        <controls:MetricRow Label="Temperature" Value="{Binding Cpu.Temperature}" />
-        <controls:MetricRow Label="Clock" Value="{Binding Cpu.Clock}" Style="{StaticResource ExtendedOnlyRowStyle}" />
-        <controls:MetricRow Label="Power" Value="{Binding Cpu.Power}" Style="{StaticResource ExtendedOnlyRowStyle}" />
-
-        <!--
-            The CPU fan row. Its label is a button showing the chosen fan ("Fan #2 ▾").
-            Clicking it opens the menu (handled in the code-behind, since it's purely about the view).
-        -->
-        <controls:MetricRow Value="{Binding Cpu.Fan}" Style="{StaticResource ExtendedOnlyRowStyle}">
-            <controls:MetricRow.Label>
-                <Button Content="{Binding Cpu.SelectedFanLabel, TargetNullValue='Fan #1 ▾', FallbackValue='Fan #1 ▾'}"
-                        Style="{StaticResource InlineSelectorButtonStyle}"
-                        Click="CpuFanSelectorButton_Click"
-                        ToolTip="Choose which motherboard fan is the CPU fan">
-                    <Button.ContextMenu>
-                        <!--
-                            ItemsSource = "create one menu item per entry in this list".
-                            The menu updates by itself when the list or its entries change.
-                        -->
-                        <ContextMenu ItemsSource="{Binding Cpu.FanOptions}">
-                            <!--
-                                ItemContainerStyle = how each generated MenuItem is set up.
-                                Inside it, {Binding ...} refers to that item's FanOptionViewModel.
-                            -->
-                            <ContextMenu.ItemContainerStyle>
-                                <Style TargetType="MenuItem">
-                                    <Setter Property="Header" Value="{Binding Label}" />
-                                    <!-- OneWay = the checkmark follows the ViewModel, never the other way round. -->
-                                    <Setter Property="IsChecked" Value="{Binding IsSelected, Mode=OneWay}" />
-                                    <!--
-                                        The command lives on the CpuViewModel, not on the item, so look it up
-                                        through the menu's own DataContext (the MainViewModel).
-                                    -->
-                                    <Setter Property="Command"
-                                            Value="{Binding DataContext.Cpu.SelectFanCommand,
-                                                            RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                                    <Setter Property="CommandParameter" Value="{Binding Name}" />
-                                </Style>
-                            </ContextMenu.ItemContainerStyle>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
-            </controls:MetricRow.Label>
-        </controls:MetricRow>
-
-        <TextBlock Text="GPU" Style="{StaticResource SectionHeaderStyle}" />
-        <controls:MetricRow Label="Utilization" Value="{Binding Gpu.Utilization}" />
-        <controls:MetricRow Label="Temperature" Value="{Binding Gpu.Temperature}" />
-        <controls:MetricRow Label="Clock" Value="{Binding Gpu.Clock}" Style="{StaticResource ExtendedOnlyRowStyle}" />
-        <controls:MetricRow Label="Voltage" Value="{Binding Gpu.Voltage}" Style="{StaticResource ExtendedOnlyRowStyle}" />
-        <controls:MetricRow Label="Power" Value="{Binding Gpu.Power}" Style="{StaticResource ExtendedOnlyRowStyle}" />
-        <controls:MetricRow Label="Fan" Value="{Binding Gpu.Fan}" />
-        <controls:MetricRow Label="VRAM" Value="{Binding Gpu.Memory}" />
-
-        <TextBlock Text="Memory" Style="{StaticResource SectionHeaderStyle}" />
-        <controls:MetricRow Label="RAM" Value="{Binding Memory.Ram}" />
-
-        <!-- The mode switch: its text and its action both come from the ViewModel. -->
-        <Button Content="{Binding DisplayModeButtonText, TargetNullValue='Show more ▾', FallbackValue='Show more ▾'}"
+        <!-- The mode switch: its text and its action both come from the MainViewModel. -->
+        <Button Content="{Binding DisplayModeButtonText}"
                 Command="{Binding ToggleDisplayModeCommand}"
                 Style="{StaticResource LinkButtonStyle}" />
     </StackPanel>

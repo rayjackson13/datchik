@@ -1,0 +1,18 @@
+﻿<!--
+    The GPU section. DataContext: a GpuViewModel (set by MainWindow).
+-->
+<UserControl x:Class="SysMonitor.App.Views.GpuPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:SysMonitor.App.Controls">
+    <StackPanel>
+        <TextBlock Text="GPU" Style="{StaticResource SectionHeaderStyle}" />
+        <controls:MetricRow Label="Utilization" Value="{Binding Utilization}" />
+        <controls:MetricRow Label="Temperature" Value="{Binding Temperature}" />
+        <controls:MetricRow Label="Clock" Value="{Binding Clock}" Style="{StaticResource ExtendedOnlyRowStyle}" />
+        <controls:MetricRow Label="Voltage" Value="{Binding Voltage}" Style="{StaticResource ExtendedOnlyRowStyle}" />
+        <controls:MetricRow Label="Power" Value="{Binding Power}" Style="{StaticResource ExtendedOnlyRowStyle}" />
+        <controls:MetricRow Label="Fan" Value="{Binding Fan}" />
+        <controls:MetricRow Label="VRAM" Value="{Binding Memory}" />
+    </StackPanel>
+</UserControl>
